@@ -1,0 +1,30 @@
+name: Random 12-Digit Pincode Updater
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate 12-Digit Pincode Text
+        run: |
+          # Generates a random 12-digit number
+          PINCODE=$(shuf -i 100000000000-999999999999 -n 1)
+          
+          # Overwrites the text file with a custom text sentence
+          echo "Current Pincode: $PINCODE" > README.md
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@://github.com"
+          git add README.md
+          git commit -m "Automated pincode text update"
+          git push
