@@ -2,9 +2,8 @@ name: Random 12-Digit Pincode Updater
 
 on:
   schedule:
-    # Runs exactly every 12 hours
     - cron: '0 */12 * * *'
-  workflow_dispatch: # Allows manual testing
+  workflow_dispatch:
 
 jobs:
   update-file:
@@ -13,19 +12,29 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Fetches all history so Git knows exactly where it is pushing
+          fetch-depth: 0 
 
       - name: Generate Plain Text 12-Digit Pincode
         run: |
           # Generates a random 12-digit number
           PINCODE=$(shuf -i 100000000000-999999999999 -n 1)
           
-          # Overwrites the file named 'Key' with just the raw code text
+          # Overwrites (or creates) the file named 'Key' with the raw text
           echo -n "$PINCODE" > Key
 
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@://github.com"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stage the file
           git add Key
-          git commit -m "Updated Key with new pincode"
-          git push
+          
+          # Only commit if the file actually changed (avoids "nothing to commit" errors)
+          git diff-index --quiet HEAD || git commit -m "Updated Key with new pincode"
+          
+          # Pull any remote changes first to prevent conflict errors, then push
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}
