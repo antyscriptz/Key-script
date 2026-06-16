@@ -1,0 +1,27 @@
+name: Random 12-Digit Pincode Updater
+
+on:
+  push: # This forces it to run immediately the second you save it!
+    branches: [ "main", "master" ]
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate 12-Digit Pincode Text
+        run: |
+          PINCODE=$(shuf -i 100000000000-999999999999 -n 1)
+          echo -n "$PINCODE" > Key
+
+      - name: Automatically Commit and Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated Key update with new pincode"
+          file_pattern: 'Key'
